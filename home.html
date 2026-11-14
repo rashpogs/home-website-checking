@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flood Rescue - Home</title>
+  
+  <!-- Import Cinzel serif font to match reference screenshot -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --gold-primary: #e6b33b;
+      --text-default: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Cinzel', 'Times New Roman', Times, serif;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+    }
+
+    /* Background Picture (Pure, full highlight without dark dimming) */
+    #bg-image {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    /* Interactive Realistic Water Ripple Canvas Layer */
+    #ripple-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* =========================================================
+       HOME MENU UI
+       ========================================================= */
+    #home-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      padding-top: 5vh;
+      padding-left: 3vw;
+      gap: 40px;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    #home-container.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    /* Interactive Logo Image */
+    #game-logo {
+      max-width: 620px;
+      width: 85%;
+      height: auto;
+      object-fit: contain;
+      cursor: pointer;
+      filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.4));
+      transition: transform 0.25s ease, filter 0.25s ease;
+    }
+
+    #game-logo:hover {
+      transform: scale(1.03);
+      filter: drop-shadow(0 0 25px rgba(230, 179, 59, 0.8));
+    }
+
+    /* Menu container */
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+      padding-left: 5vw;
+    }
+
+    /* Base Menu Button styling */
+    .menu-btn {
+      color: var(--text-default);
+      font-size: 26px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 5px;
+      transition: color 0.2s ease, transform 0.2s ease;
+      text-decoration: none;
+      text-transform: uppercase;
+      position: relative;
+      padding: 6px 0;
+      text-shadow: 0 3px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    /* Gold separator lines on hover */
+    .menu-btn::before,
+    .menu-btn::after {
+      content: '';
+      position: absolute;
+      left: -15px;
+      right: -15px;
+      height: 1.5px;
+      background: linear-gradient(90deg, 
+          transparent 0%, 
+          #e6b33b 20%, 
+          #8a6d24 50%, 
+          #e6b33b 80%, 
+          transparent 100%
+      );
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .menu-btn::before { top: -2px; }
+    .menu-btn::after { bottom: -2px; }
+
+    .menu-btn:hover {
+      color: var(--gold-primary);
+      transform: translateX(4px);
+    }
+
+    .menu-btn:hover::before,
+    .menu-btn:hover::after {
+      opacity: 1;
+    }
+
+
+    /* =========================================================
+       SETTINGS OVERLAY UI
+       ========================================================= */
+    #settings-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      padding: 40px 60px;
+      background: rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    #settings-container.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Header Section with Back Button */
+    .settings-header {
+      width: 100%;
+    }
+
+    .back-title-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffffff;
+      font-size: 24px;
+      letter-spacing: 4px;
+      font-weight: 400;
+      text-transform: uppercase;
+      text-decoration: none;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: color 0.25s ease, transform 0.25s ease;
+    }
+
+    .back-title-btn .chevron {
+      font-size: 22px;
+    }
+
+    .back-title-btn:hover {
+      color: var(--gold-primary);
+      transform: translateX(-4px);
+    }
+
+    /* Thin Gold Separator Line */
+    .gold-divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(
+        90deg, 
+        rgba(212, 149, 32, 0) 0%, 
+        rgba(212, 149, 32, 0.4) 15%, 
+        #f3b93f 50%, 
+        rgba(212, 149, 32, 0.4) 85%, 
+        rgba(212, 149, 32, 0) 100%
+      );
+      margin-bottom: 35px;
+      box-shadow: 0 0 6px rgba(243, 185, 63, 0.4);
+    }
+
+    /* Settings Body Layout */
+    .settings-body {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      gap: 60px;
+    }
+
+    /* Left Sidebar Navigation */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 230px;
+    }
+
+    /* Sidebar Items: Bright White Highlight & Scale on Hover/Active */
+    .sidebar-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #ffffff;
+      opacity: 0.5;
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 12px;
+      transform-origin: left center;
+      transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                  transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                  color 0.3s ease;
+    }
+
+    .sidebar-item .arrow {
+      font-size: 16px;
+    }
+
+    .sidebar-item:hover {
+      opacity: 0.9;
+      transform: scale(1.08) translateX(4px);
+    }
+
+    .sidebar-item.active {
+      opacity: 1;
+      transform: scale(1.12) translateX(6px);
+      color: #ffffff;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    }
+
+    /* Right Main Panel */
+    .main-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sub-tabs Container */
+    .sub-tabs {
+      display: flex;
+      gap: 35px;
+      margin-bottom: 30px;
+    }
+
+    /* Sub-tabs Items: Bright White Highlight & Scale */
+    .tab-item {
+      color: #ffffff;
+      opacity: 0.5;
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 6px 18px;
+      border-radius: 12px;
+      transform-origin: center center;
+      transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                  transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                  color 0.3s ease;
+    }
+
+    .tab-item:hover {
+      opacity: 0.9;
+      transform: scale(1.08);
+    }
+
+    .tab-item.active {
+      opacity: 1;
+      transform: scale(1.12);
+      color: #ffffff;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    }
+
+    /* Control Key Items List & Panels */
+    .settings-view {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Keybind Capsule Pill */
+    .keybind-pill {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(12, 12, 12, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 5px 12px 5px 5px;
+      width: fit-content;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      gap: 10px;
+    }
+
+    .key-box {
+      background: #ffffff;
+      color: #000000;
+      font-weight: 600;
+      font-size: 13px;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    .key-label {
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* =========================================================
+       SLIDER STYLING (Sensitivity & Audio)
+       ========================================================= */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      background: rgba(12, 12, 12, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 10px 20px;
+      width: 450px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      justify-content: space-between;
+    }
+
+    .slider-label {
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      width: 60px;
+    }
+
+    .slider-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      margin: 0 15px;
+      position: relative;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+    }
+
+    input[type=range]:focus {
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 4px;
+      cursor: pointer;
+      background: #ffffff;
+      border-radius: 2px;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 14px;
+      width: 14px;
+      border-radius: 50%;
+      background: #ffffff;
+      cursor: pointer;
+      margin-top: -5px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.8);
+      transition: transform 0.1s ease;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .slider-value {
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 1.5px;
+      width: 45px;
+      text-align: right;
+    }
+
+    /* =========================================================
+       LANGUAGE SELECTOR STYLING (< TAGALOG >)
+       ========================================================= */
+    .language-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(12, 12, 12, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 12px 24px;
+      width: 450px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .lang-arrow {
+      color: #ffffff;
+      opacity: 0.6;
+      font-size: 18px;
+      font-weight: 400;
+      cursor: pointer;
+      padding: 4px 10px;
+      transition: opacity 0.2s ease, transform 0.2s ease, text-shadow 0.2s ease;
+    }
+
+    .lang-arrow:hover {
+      opacity: 1;
+      transform: scale(1.2);
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+    }
+
+    .lang-display {
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
+      flex: 1;
+      transition: opacity 0.15s ease;
+    }
+
+    /* =========================================================
+       ABOUT LIKAS MODAL (LORE OVERLAY)
+       ========================================================= */
+    #likas-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      padding: 40px 60px;
+      background: rgba(0, 0, 0, 0.65);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    #likas-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .likas-content-box {
+      flex: 1;
+      background: rgba(12, 12, 12, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 30px 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+      overflow-y: auto;
+      max-width: 850px;
+      margin-top: 15px;
+    }
+
+    /* Custom thin scrollbar */
+    .likas-content-box::-webkit-scrollbar {
+      width: 6px;
+    }
+    .likas-content-box::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 3px;
+    }
+    .likas-content-box::-webkit-scrollbar-thumb {
+      background: var(--gold-primary);
+      border-radius: 3px;
+    }
+
+    .likas-title {
+      color: var(--gold-primary);
+      font-size: 24px;
+      letter-spacing: 3px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .likas-text {
+      color: #ffffff;
+      font-size: 15px;
+      line-height: 1.8;
+      letter-spacing: 1px;
+      margin-bottom: 18px;
+    }
+
+    .likas-quote {
+      color: var(--gold-primary);
+      font-weight: 600;
+      font-size: 16px;
+      margin-top: 25px;
+      line-height: 1.6;
+      letter-spacing: 1.5px;
+      border-left: 3px solid var(--gold-primary);
+      padding-left: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Picture -->
+  <img id="bg-image" src="home.jpg" alt="Background">
+
+  <!-- Interactive Realistic Water Ripple Canvas -->
+  <canvas id="ripple-canvas"></canvas>
+
+  <!-- Background Music Element -->
+  <audio id="bg-music" src="The Ring of Madness.mp3" preload="auto" loop></audio>
+
+  <!-- =========================================================
+       HOME MENU UI
+       ========================================================= -->
+  <div id="home-container">
+    <!-- Clicking Logo opens LIKAS description modal -->
+    <img id="game-logo" src="LIKASlogo.png" alt="Logo" onclick="playClickSound(); openLikasModal();">
+
+    <div class="menu-buttons">
+      <a href="index.html" class="menu-btn" onclick="startGame()">START</a>
+      <div class="menu-btn" onclick="playClickSound(); openSettings();">SETTINGS</div>
+      <div class="menu-btn" onclick="playClickSound(); openCredits();">CREDITS</div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       ABOUT LIKAS MODAL (LORE OVERLAY)
+       ========================================================= -->
+  <div id="likas-modal">
+    <div class="settings-header">
+      <div class="back-title-btn" onclick="playClickSound(); closeLikasModal();">
+        <span class="chevron">&lt;</span>
+        <span>ABOUT LIKAS</span>
+      </div>
+      <div class="gold-divider"></div>
+    </div>
+
+    <div class="likas-content-box">
+      <div class="likas-title">The Heart of LIKAS</div>
+      <p class="likas-text">
+        <strong>LIKAS</strong> means something natural, inherent, or something that is already part of us. In our game, the name represents the natural Filipino trait of being <em>likas na matulungin, makatao, at mapagmalasakit</em>.
+      </p>
+      <p class="likas-text">
+        During disasters such as typhoons and floods, Filipinos show their true spirit of <strong>bayanihan</strong> by helping one another, rescuing those in danger, sharing resources, and providing hope to those who have lost their homes.
+      </p>
+      <p class="likas-text">
+        The word LIKAS can also be associated with <em>likas</em> or <em>paglikas</em>, which means evacuating or moving to a safer place during emergencies. This connects directly to our game's main theme, where players are challenged to make decisions, respond to emergency situations, and understand the importance of proper evacuation, preparedness, and helping others.
+      </p>
+      <p class="likas-text">
+        Through LIKAS, we want to show that surviving a disaster is not only about saving ourselves but also about extending a helping hand to those who need it. It reminds us that although disasters may test our strength, our compassion and willingness to help are what make us truly Filipino.
+      </p>
+      <div class="likas-quote">
+        "LIKAS: Likas na Katatagan, Bayanihan, at Malasakit.<br>
+        Dahil ang pagtulong sa kapwa ay hindi lamang tungkulin, kundi likas na katangian ng isang tunay na Pilipino."
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       SETTINGS OVERLAY UI
+       ========================================================= -->
+  <div id="settings-container">
+    
+    <!-- Title & Back Button Header -->
+    <div class="settings-header">
+      <div class="back-title-btn" onclick="playClickSound(); closeSettings();">
+        <span class="chevron">&lt;</span>
+        <span>SETTINGS</span>
+      </div>
+      <div class="gold-divider"></div>
+    </div>
+
+    <!-- Main Settings Body -->
+    <div class="settings-body">
+      
+      <!-- Left Sidebar Navigation -->
+      <div class="sidebar">
+        <div id="nav-controls" class="sidebar-item active" onclick="playClickSound(); switchCategory('controls', this)">
+          <span>Controls</span>
+          <span class="arrow">&gt;</span>
+        </div>
+        <div id="nav-camera" class="sidebar-item" onclick="playClickSound(); switchCategory('camera', this)">
+          <span>Camera</span>
+          <span class="arrow">&gt;</span>
+        </div>
+        <div id="nav-audio" class="sidebar-item" onclick="playClickSound(); switchCategory('audio', this)">
+          <span>Audio</span>
+          <span class="arrow">&gt;</span>
+        </div>
+        <div id="nav-language" class="sidebar-item" onclick="playClickSound(); switchCategory('language', this)">
+          <span>Language</span>
+          <span class="arrow">&gt;</span>
+        </div>
+      </div>
+
+      <!-- Right Panel Area -->
+      <div class="main-panel">
+        
+        <!-- Sub Tabs Container -->
+        <div id="sub-tabs-container" class="sub-tabs">
+          <!-- Populated dynamically via JS depending on sidebar category -->
+        </div>
+
+        <!-- Controls View (Movement Keybinds) -->
+        <div id="view-movement" class="settings-view">
+          <div class="keybind-pill">
+            <div class="key-box">W</div>
+            <span class="key-label">Move Forward</span>
+          </div>
+          <div class="keybind-pill">
+            <div class="key-box">S</div>
+            <span class="key-label">Move Backward</span>
+          </div>
+          <div class="keybind-pill">
+            <div class="key-box">A</div>
+            <span class="key-label">Move Left</span>
+          </div>
+          <div class="keybind-pill">
+            <div class="key-box">D</div>
+            <span class="key-label">Move Right</span>
+          </div>
+        </div>
+
+        <!-- Camera View (Sensitivity Sliders) -->
+        <div id="view-sensitivity" class="settings-view" style="display: none;">
+          <div class="slider-row">
+            <span class="slider-label">TPF</span>
+            <div class="slider-container">
+              <input type="range" min="0" max="100" value="25" oninput="playClickSound(); updateSlider(this, 'tpf-val')">
+            </div>
+            <span id="tpf-val" class="slider-value">25%</span>
+          </div>
+
+          <div class="slider-row">
+            <span class="slider-label">FPV</span>
+            <div class="slider-container">
+              <input type="range" min="0" max="100" value="25" oninput="playClickSound(); updateSlider(this, 'fpv-val')">
+            </div>
+            <span id="fpv-val" class="slider-value">25%</span>
+          </div>
+        </div>
+
+        <!-- Audio View (Music & SFX Sliders) -->
+        <div id="view-audio" class="settings-view" style="display: none;">
+          <div class="slider-row">
+            <span class="slider-label">Music</span>
+            <div class="slider-container">
+              <input type="range" min="0" max="100" value="25" oninput="updateMusicVolume(this); updateSlider(this, 'music-val')">
+            </div>
+            <span id="music-val" class="slider-value">25%</span>
+          </div>
+
+          <div class="slider-row">
+            <span class="slider-label">SFX</span>
+            <div class="slider-container">
+              <input type="range" min="0" max="100" value="25" oninput="playClickSound(); updateSlider(this, 'sfx-val')">
+            </div>
+            <span id="sfx-val" class="slider-value">25%</span>
+          </div>
+        </div>
+
+        <!-- Language View (Select Dialogue) -->
+        <div id="view-language" class="settings-view" style="display: none;">
+          <div class="language-row">
+            <span class="lang-arrow" onclick="playClickSound(); changeLanguage(-1)">&lt;</span>
+            <span id="selected-language" class="lang-display">TAGALOG</span>
+            <span class="lang-arrow" onclick="playClickSound(); changeLanguage(1)">&gt;</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const bgMusic = document.getElementById('bg-music');
+    bgMusic.volume = 0.25;
+
+    // Force play on any first click to bypass browser autoplay policies
+    document.addEventListener('click', () => {
+      if (bgMusic.paused) {
+        bgMusic.play().catch(() => {});
+      }
+    }, { once: true });
+
+    function startGame() {
+      playClickSound();
+      bgMusic.pause();
+      bgMusic.currentTime = 0;
+    }
+
+    function updateMusicVolume(slider) {
+      playClickSound();
+      bgMusic.volume = slider.value / 100;
+    }
+
+    // Built-in synthesized click sound effect generator
+    function playClickSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.04);
+
+        gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.04);
+      } catch (e) {}
+    }
+
+    const languages = ['TAGALOG', 'ENGLISH', 'BISAYA', 'BICOL'];
+    let currentLangIndex = 0;
+
+    function changeLanguage(direction) {
+      const langDisplay = document.getElementById('selected-language');
+      langDisplay.style.opacity = '0';
+
+      setTimeout(() => {
+        currentLangIndex = (currentLangIndex + direction + languages.length) % languages.length;
+        langDisplay.innerText = languages[currentLangIndex];
+        langDisplay.style.opacity = '1';
+      }, 120);
+    }
+
+    function openLikasModal() {
+      document.getElementById('home-container').classList.add('hidden');
+      document.getElementById('likas-modal').classList.add('active');
+    }
+
+    function closeLikasModal() {
+      document.getElementById('likas-modal').classList.remove('active');
+      document.getElementById('home-container').classList.remove('hidden');
+    }
+
+    function openSettings() {
+      document.getElementById('home-container').classList.add('hidden');
+      document.getElementById('settings-container').classList.add('active');
+      switchCategory('controls', document.getElementById('nav-controls'));
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-container').classList.remove('active');
+      document.getElementById('home-container').classList.remove('hidden');
+    }
+
+    function openCredits() {
+      document.getElementById('home-container').classList.add('hidden');
+      alert('Credits opened');
+      document.getElementById('home-container').classList.remove('hidden');
+    }
+
+    function switchCategory(category, element) {
+      document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+      element.classList.add('active');
+
+      const subTabsContainer = document.getElementById('sub-tabs-container');
+      const viewMovement = document.getElementById('view-movement');
+      const viewSensitivity = document.getElementById('view-sensitivity');
+      const viewAudio = document.getElementById('view-audio');
+      const viewLanguage = document.getElementById('view-language');
+
+      viewMovement.style.display = 'none';
+      viewSensitivity.style.display = 'none';
+      viewAudio.style.display = 'none';
+      viewLanguage.style.display = 'none';
+
+      if (category === 'controls') {
+        subTabsContainer.innerHTML = `
+          <div id="tab-movement" class="tab-item active" onclick="playClickSound(); switchSubTab('movement')">Movement</div>
+        `;
+        viewMovement.style.display = 'flex';
+      } 
+      else if (category === 'camera') {
+        subTabsContainer.innerHTML = `
+          <div id="tab-sensitivity" class="tab-item active" onclick="playClickSound(); switchSubTab('sensitivity')">Sensitivity</div>
+        `;
+        viewSensitivity.style.display = 'flex';
+      } 
+      else if (category === 'audio') {
+        subTabsContainer.innerHTML = `
+          <div id="tab-music" class="tab-item active" onclick="playClickSound(); switchSubTab('audio')">Music</div>
+        `;
+        viewAudio.style.display = 'flex';
+      }
+      else if (category === 'language') {
+        subTabsContainer.innerHTML = `
+          <div id="tab-dialogue" class="tab-item active" onclick="playClickSound(); switchSubTab('language')">Select Dialogue</div>
+        `;
+        viewLanguage.style.display = 'flex';
+      }
+    }
+
+    function switchSubTab(tabName) {
+      playClickSound();
+      const viewMovement = document.getElementById('view-movement');
+      const viewSensitivity = document.getElementById('view-sensitivity');
+      const viewAudio = document.getElementById('view-audio');
+      const viewLanguage = document.getElementById('view-language');
+
+      document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
+
+      viewMovement.style.display = 'none';
+      viewSensitivity.style.display = 'none';
+      viewAudio.style.display = 'none';
+      viewLanguage.style.display = 'none';
+
+      if (tabName === 'movement') {
+        const tabEl = document.getElementById('tab-movement');
+        if (tabEl) tabEl.classList.add('active');
+        viewMovement.style.display = 'flex';
+      } else if (tabName === 'sensitivity') {
+        const tabEl = document.getElementById('tab-sensitivity');
+        if (tabEl) tabEl.classList.add('active');
+        viewSensitivity.style.display = 'flex';
+      } else if (tabName === 'audio') {
+        const tabEl = document.getElementById('tab-music');
+        if (tabEl) tabEl.classList.add('active');
+        viewAudio.style.display = 'flex';
+      } else if (tabName === 'language') {
+        const tabEl = document.getElementById('tab-dialogue');
+        if (tabEl) tabEl.classList.add('active');
+        viewLanguage.style.display = 'flex';
+      }
+    }
+
+    function updateSlider(slider, valueId) {
+      document.getElementById(valueId).innerText = slider.value + '%';
+    }
+
+    /* =========================================================
+       REALISTIC FLUID WATER RIPPLE EFFECT PHYSICS ENGINE
+       ========================================================= */
+    const canvas = document.getElementById('ripple-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let ripples = [];
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Spawn realistic fluid ripple on mouse movement with smooth throttling
+    let lastX = 0, lastY = 0, lastTime = 0;
+    window.addEventListener('mousemove', (e) => {
+      const now = Date.now();
+      const dist = Math.hypot(e.clientX - lastX, e.clientY - lastY);
+      if (now - lastTime > 30 && dist > 8) {
+        ripples.push({
+          x: e.clientX,
+          y: e.clientY,
+          radius: 4,
+          maxRadius: 55 + Math.random() * 25,
+          alpha: 0.5,
+          speed: 1.6
+        });
+        lastX = e.clientX;
+        lastY = e.clientY;
+        lastTime = now;
+      }
+    });
+
+    // Spawn deeper ripple burst on click
+    window.addEventListener('click', (e) => {
+      ripples.push({
+        x: e.clientX,
+        y: e.clientY,
+        radius: 6,
+        maxRadius: 95,
+        alpha: 0.75,
+        speed: 2.0
+      });
+    });
+
+    function animateRipples() {
+      ctx.clearRect(0, 0, width, height);
+
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        let r = ripples[i];
+        r.radius += r.speed;
+        r.alpha *= 0.95; // Smooth decay
+
+        if (r.alpha < 0.01 || r.radius > r.maxRadius) {
+          ripples.splice(i, 1);
+          continue;
+        }
+
+        // Realistic multi-ring interference waveform refraction
+        ctx.save();
+        
+        // Outer wave crest
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${r.alpha * 0.7})`;
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+
+        // Inner refracted trough (Water depth shadow line)
+        if (r.radius > 8) {
+          ctx.beginPath();
+          ctx.arc(r.x, r.y, r.radius * 0.75, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(180, 220, 255, ${r.alpha * 0.35})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+
+        // Golden caustic reflection glint on water surface
+        if (r.radius > 15) {
+          ctx.beginPath();
+          ctx.arc(r.x, r.y, r.radius * 0.5, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(230, 179, 59, ${r.alpha * 0.4})`;
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      requestAnimationFrame(animateRipples);
+    }
+    animateRipples();
+  </script>
+
+</body>
+</html>
